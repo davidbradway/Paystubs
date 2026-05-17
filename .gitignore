@@ -1,0 +1,23 @@
+# Paystub source documents
+*.pdf
+
+# Generated output files
+*.parquet
+*.png
+*.csv
+*.xlsx
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
