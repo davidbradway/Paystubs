@@ -201,37 +201,37 @@ if __name__ == '__main__':
     print(f"  Total contributed:  ${contrib['total_ytd_employee_cont'].sum():,.2f}")
     print()
 
-# --- Plot ---
-fig, axes = plt.subplots(1, 2, figsize=(12, 8))
-# add a panel to the plot to show total_ytd_employee_cont by year
-ax = axes[0]
-yearly_contrib = df[df['month'] == 12]
-ax.plot(yearly_contrib['period_end'], yearly_contrib['total_ytd_employee_cont'], color='steelblue')
-ax.set_title('Yearly Employee Contributions')
-ax.set_xlabel('Year')
-ax.set_ylabel('Amount ($)')
-ax.grid(alpha=0.3)
+    # --- Plot ---
+    fig, axes = plt.subplots(1, 2, figsize=(12, 8))
+    # add a panel to the plot to show total_ytd_employee_cont by year
+    ax = axes[0]
+    yearly_contrib = df[df['month'] == 12]
+    ax.plot(yearly_contrib['period_end'], yearly_contrib['total_ytd_employee_cont'], color='steelblue')
+    ax.set_title('Yearly Employee Contributions')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Amount ($)')
+    ax.grid(alpha=0.3)
 
-ax = axes[1]
-ax.plot(df['period_end'], df['gross_pay'], label='Gross Pay', color='green')
-ax.plot(df['period_end'], df['net_pay'], label='Net Pay', color='steelblue')
-ax.plot(df['period_end'], df['taxes'], label='Taxes', color='red', alpha=0.7)
-ax.set_title('Monthly Pay Summary')
-ax.set_ylabel('Amount ($)')
-ax.legend()
-ax.grid(alpha=0.3)
-plt.tight_layout()
-plt.savefig(r'paystub_summary.png', dpi=150)
-plt.show()
-print("\nPlot saved to paystub_summary.png\n")
+    ax = axes[1]
+    ax.plot(df['period_end'], df['gross_pay'], label='Gross Pay', color='green')
+    ax.plot(df['period_end'], df['net_pay'], label='Net Pay', color='steelblue')
+    ax.plot(df['period_end'], df['taxes'], label='Taxes', color='red', alpha=0.7)
+    ax.set_title('Monthly Pay Summary')
+    ax.set_ylabel('Amount ($)')
+    ax.legend()
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(r'paystub_summary.png', dpi=150)
+    plt.show()
+    print("\nPlot saved to paystub_summary.png\n")
 
-# --- Find totals for each column ---
-columns_to_sum = [
-    'gross_pay', 'pretax_ded', 'tax_deferred', 'taxable_gross', 'taxes',
-    'deductions', 'net_pay', '403b_employee_current',
-    '403b_employer_current','tax_fed',
-    'tax_oasdi', 'tax_medicare', 'tax_nc'
-]
+    # --- Find totals for each column ---
+    columns_to_sum = [
+        'gross_pay', 'pretax_ded', 'tax_deferred', 'taxable_gross', 'taxes',
+        'deductions', 'net_pay', '403b_employee_current',
+        '403b_employer_current','tax_fed',
+        'tax_oasdi', 'tax_medicare', 'tax_nc'
+    ]
 
     for column in columns_to_sum:
         total = df[column].sum()
