@@ -115,6 +115,39 @@ def parse_paystub(path: Path) -> dict:
         m = re.search(rf'\|{pattern}([\d,]+\.\d{{2}})', text)
         result[col] = parse_amount(m.group(1)) if m else 0.0
 
+    # --- Get the totals ---
+    # Find the last occurrence of "TOTAL" in the original text
+    last_total_start_index = text.rfind("TOTAL")
+
+    if last_total_start_index != -1:
+        # Get the substring starting from the found "TOTAL"
+        # and extend it to the next newline character, or to the end of the text
+        segment_start_index = last_total_start_index
+        newline_index = text.find('\n', segment_start_index)
+
+        if newline_index != -1:
+            # Extract the line segment containing "TOTAL" and the numbers after it
+            line_segment = text[segment_start_index:newline_index]
+        else:
+            # If no newline, take till the end of the string
+            line_segment = text[segment_start_index:]
+
+        # Now, use a forward-looking regex on this extracted line segment
+        # to capture the three numbers immediately following "TOTAL".
+        # The regex must now match numbers in their natural, non-reversed format.
+        pattern_forward = r"TOTAL\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})"
+        m_forward = re.search(pattern_forward, line_segment)
+
+        if m_forward:
+            # Captured values are in the correct order for parse_amount
+            result['total_cur_employer_cont'] = parse_amount(m_forward.group(1))
+            result['total_ytd_employee_cont'] = parse_amount(m_forward.group(2))
+            result['total_ytd_employer_cont'] = parse_amount(m_forward.group(3))
+        else:
+            print("Could not extract the three numbers after the last 'TOTAL' using forward regex.")
+    else:
+        print("Could not find the substring 'TOTAL' in the text.")
+
     return result
 
 
@@ -153,37 +186,22 @@ if __name__ == '__main__':
           f"{df['period_end'].min().date()} to {df['period_end'].max().date()}\n")
 
     # --- 403B summary ---
-    contrib = df[df['403b_employee_current'] > 0]
-    print("=== 403B Post-Tax Employee Contributions ===")
-    print(f"  Months with contributions: {len(contrib)}")
-    print(f"  First contribution: {contrib['period_end'].min().date()}")
-    print(f"  Total contributed:  ${contrib['403b_employee_current'].sum():,.2f}")
-    print(f"  Monthly avg:        ${contrib['403b_employee_current'].mean():,.2f}")
+    contrib = df[(df['total_ytd_employee_cont'] > 0) & (df['month'] == 12)]
+    print("=== Total Employee Contributions ===")
+    print(f"  Total contributed:  ${contrib['total_ytd_employee_cont'].sum():,.2f}")
     print()
 
-    annual = df.groupby('year').agg(
-        gross=('gross_pay', 'sum'),
-        net=('net_pay', 'sum'),
-        taxes=('taxes', 'sum'),
-        emp_403b=('403b_employee_current', 'sum'),
-        er_403b=('403b_employer_current', 'sum'),
-    ).round(2)
-    print("=== Annual Summary ===")
-    print(annual.to_string())
+    # --- Plot ---
+    fig, axes = plt.subplots(1, 2, figsize=(12, 8))
 
-    # --- Plot: 403B contributions over time ---
-    fig, axes = plt.subplots(2, 1, figsize=(12, 8))
-
+    # add a panel to the plot to show total_ytd_employee_cont by year
     ax = axes[0]
-    ax.bar(df['period_end'], df['403b_employee_current'], width=25,
-           label='Employee (post-tax)', color='steelblue')
-    ax.bar(df['period_end'], df['403b_employer_current'], width=25,
-           bottom=df['403b_employee_current'],
-           label='Employer match', color='orange', alpha=0.8)
-    ax.set_title('Monthly 403(b) Contributions')
-    ax.set_ylabel('Amount ($)')
-    ax.legend()
-    ax.grid(axis='y', alpha=0.3)
+    yearly_contrib = df[df['month'] == 12].groupby('year')['total_ytd_employee_cont'].max()
+    ax.bar(yearly_contrib.index, yearly_contrib.values, color='steelblue')
+    ax.set_title('Yearly Employee 403B Contributions')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Total YTD Employee Contribution ($)')
+    ax.grid(alpha=0.3)
 
     ax = axes[1]
     ax.plot(df['period_end'], df['gross_pay'], label='Gross Pay', color='green')
