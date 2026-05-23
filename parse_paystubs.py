@@ -215,26 +215,22 @@ if __name__ == '__main__':
     print(f"\nLoaded {len(df)} paystubs from "
           f"{df['period_end'].min().date()} to {df['period_end'].max().date()}\n")
 
-    # --- 403B summary ---
-    # Warning! This assumes that Total Year to Date Employee Contributions are
-    # purely from 403B contributions, which is true for mypaystubs but may not
-    # be universally true. For example HSA contributions could also be 
-    # included in that total in other cases (and will be for me in 2026+)
-    contrib = df[(df['total_ytd_employee_cont'] > 0) & (df['month'] == 12)]
-    print("=== Total Employee Contributions ===")
-    print(f"  Total contributed:  ${contrib['total_ytd_employee_cont'].sum():,.2f}")
-    print()
-
     # --- Plot ---
-    fig, axes = plt.subplots(1, 2, figsize=(12, 8))
-    # add a panel to the plot to show total_ytd_employee_cont by year
-    ax = axes[0]
+    fig, axes = plt.subplots(2, 1, figsize=(12, 8))
+    x_min = df['period_end'].min()
+    x_max = df['period_end'].max()
+
     yearly_contrib = df[df['month'] == 12]
     yearly_403b_pre = df.groupby('year')['403b_pre'].sum().reset_index()
     yearly_403b_post = df.groupby('year')['403b_employee_current'].sum().reset_index()
+
+    # add a panel to the plot to show total_ytd_employee_cont by year
+    ax = axes[0]
     ax.plot(pd.to_datetime(yearly_contrib['year'].astype(int), format='%Y'), yearly_contrib['total_ytd_employee_cont'], color='steelblue', label='Total Employee Contrib')
+    ax.plot(pd.to_datetime(yearly_contrib['year'].astype(int), format='%Y'), yearly_contrib['total_ytd_employer_cont'], color='red', label='Total Employer Contrib')
     ax.plot(pd.to_datetime(yearly_403b_pre['year'].astype(int), format='%Y'), yearly_403b_pre['403b_pre'], color='orange', label='403b Pre-tax')
     ax.plot(pd.to_datetime(yearly_403b_post['year'].astype(int), format='%Y'), yearly_403b_post['403b_employee_current'], color='green', label='403b Post-tax/Roth (missing in early years)')
+    ax.set_xlim(x_min, x_max)
     ax.set_title('Yearly Employee Contributions')
     ax.set_xlabel('Year')
     ax.set_ylabel('Amount ($)')
@@ -245,6 +241,7 @@ if __name__ == '__main__':
     ax.plot(df['period_end'], df['gross_pay'], label='Gross Pay', color='green')
     ax.plot(df['period_end'], df['net_pay'], label='Net Pay', color='steelblue')
     ax.plot(df['period_end'], df['taxes'], label='Taxes', color='red', alpha=0.7)
+    ax.set_xlim(x_min, x_max)
     ax.set_title('Monthly Pay Summary')
     ax.set_ylabel('Amount ($)')
     ax.legend()
@@ -254,12 +251,23 @@ if __name__ == '__main__':
     plt.show()
     print("\nPlot saved to paystub_summary.png\n")
 
+    # --- 403B summary ---
+    # Warning! This assumes that Total Year to Date Employee Contributions are
+    # purely from 403B contributions, which is true for mypaystubs but may not
+    # be universally true. For example HSA contributions could also be 
+    # included in that total in other cases (and will be for me in 2026+)
+    print("===  Employee Contributions ===")
+    print(f"  Total PST from Paystubs: ${yearly_403b_post['403b_employee_current'].sum():,.2f} (The 403b POST box is missing in early years)")
+    print(f"  Actual PST contributed:  ${yearly_contrib['total_ytd_employee_cont'].sum():,.2f}")
+    print(f"  Total PRE contributed:  ${yearly_403b_pre['403b_pre'].sum():,.2f}")
+    print(f"  Total employer contributed:  ${yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
+    print(f"  Total ALL contributed:  ${yearly_403b_pre['403b_pre'].sum() + yearly_contrib['total_ytd_employee_cont'].sum() + yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
+    print("\n")
+
     # --- Find totals for each column ---
     columns_to_sum = [
-        'gross_pay', 'pretax_ded', 'tax_deferred', 'taxable_gross', 'taxes',
-        'deductions', 'net_pay', '403b_employee_current',
-        '403b_employer_current','tax_fed',
-        'tax_oasdi', 'tax_medicare', 'tax_nc'
+        'gross_pay', 'taxes', 'net_pay', '403b_employee_current',
+        '403b_employer_current','tax_fed','tax_nc'
     ]
 
     for column in columns_to_sum:
