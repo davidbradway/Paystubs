@@ -230,10 +230,15 @@ if __name__ == '__main__':
     # add a panel to the plot to show total_ytd_employee_cont by year
     ax = axes[0]
     yearly_contrib = df[df['month'] == 12]
-    ax.plot(yearly_contrib['period_end'], yearly_contrib['total_ytd_employee_cont'], color='steelblue')
+    yearly_403b_pre = df.groupby('year')['403b_pre'].sum().reset_index()
+    yearly_403b_post = df.groupby('year')['403b_employee_current'].sum().reset_index()
+    ax.plot(pd.to_datetime(yearly_contrib['year'].astype(int), format='%Y'), yearly_contrib['total_ytd_employee_cont'], color='steelblue', label='Total Employee Contrib')
+    ax.plot(pd.to_datetime(yearly_403b_pre['year'].astype(int), format='%Y'), yearly_403b_pre['403b_pre'], color='orange', label='403b Pre-tax')
+    ax.plot(pd.to_datetime(yearly_403b_post['year'].astype(int), format='%Y'), yearly_403b_post['403b_employee_current'], color='green', label='403b Post-tax/Roth (missing in early years)')
     ax.set_title('Yearly Employee Contributions')
     ax.set_xlabel('Year')
     ax.set_ylabel('Amount ($)')
+    ax.legend()
     ax.grid(alpha=0.3)
 
     ax = axes[1]
