@@ -148,6 +148,30 @@ def parse_paystub(path: Path) -> dict:
     else:
         print("Could not find the substring 'TOTAL' in the text.")
 
+    # --- Line-item deductions and benefits ---
+    # All labels searched as-is in extracted text; 0.0 if absent on this paystub.
+    line_items = {
+        'FLATSUPP':  'flatsupp',
+        'TRANSIT':   'transit',
+        'HLTHCREIM': 'hlthcreim',
+        'DAYCREIM':  'daycreim',
+        '403B PRE':  '403b_pre',
+        'VOLSTD':    'volstd',
+        'HORIZONS':  'horizons',
+        'DOINGOOD':  'doingood',
+        'LIVELIFE':  'livelife',
+        'SUPPLIFE':  'supplife',
+        'PAI':       'pai',
+        'HC LIMI':   'hc_limi',
+        'HSA EE':    'hsa_ee',
+        'VISION':    'vision',
+        'DENTAL B':  'dental_b',
+        'DUKE ADV':  'duke_adv',
+    }
+    for label, col in line_items.items():
+        m = re.search(rf'{re.escape(label)}\s+([\d,]+\.\d{{2}})', text)
+        result[col] = parse_amount(m.group(1)) if m else 0.0
+
     return result
 
 
