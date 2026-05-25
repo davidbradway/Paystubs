@@ -257,12 +257,12 @@ if __name__ == '__main__':
     # be universally true. For example HSA contributions could also be 
     # included in that total in other cases (and will be for me in 2026+)
     print("===  Employee Contributions ===")
-    print(f"  Total PST from Paystubs: ${yearly_403b_post['403b_employee_current'].sum():,.2f} (The 403b POST box is missing in early years)")
+    print(f"  Total  PST from Paystubs: ${yearly_403b_post['403b_employee_current'].sum():,.2f} (The 403b POST box is missing in early years)")
     print(f"  Actual PST contributed:  ${yearly_contrib['total_ytd_employee_cont'].sum():,.2f}")
-    print(f"  Total PRE contributed:  ${yearly_403b_pre['403b_pre'].sum():,.2f}")
-    print(f"  Total employer contributed:  ${yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
-    print(f"  Total ALL contributed:  ${yearly_403b_pre['403b_pre'].sum() + yearly_contrib['total_ytd_employee_cont'].sum() + yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
-    print("\n")
+    print(f"  Total  PRE contributed:  ${yearly_403b_pre['403b_pre'].sum():,.2f}")
+    print(f"  Total  employer contributed:  ${yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
+    print(f"  Total  ALL contributed:  ${yearly_403b_pre['403b_pre'].sum() + yearly_contrib['total_ytd_employee_cont'].sum() + yearly_contrib['total_ytd_employer_cont'].sum():,.2f}")
+    print()
 
     # --- Find totals for each column ---
     columns_to_sum = [
